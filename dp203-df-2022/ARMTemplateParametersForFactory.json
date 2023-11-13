@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "dp203-df-2022"
+		},
+		"appuservm_password": {
+			"value": ""
+		},
+		"datalake1_accountKey": {
+			"value": ""
+		},
+		"sqldb_dev_connectionString": {
+			"value": ""
+		},
+		"appuservm_properties_typeProperties_host": {
+			"value": "D:\\nginx-1.24.0\\logs"
+		},
+		"appuservm_properties_typeProperties_userId": {
+			"value": "appuser"
+		},
+		"datalake1_properties_typeProperties_url": {
+			"value": "https://datalakedp203dev.dfs.core.windows.net/"
+		}
+	}
+}

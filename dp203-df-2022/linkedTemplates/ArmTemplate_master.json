@@ -1,0 +1,124 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "dp203-df-2022"
+		},
+		"appuservm_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'appuservm'"
+		},
+		"datalake1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'datalake1'"
+		},
+		"sqldb_dev_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqldb_dev'"
+		},
+		"appuservm_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "D:\\nginx-1.24.0\\logs"
+		},
+		"appuservm_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "appuser"
+		},
+		"datalake1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalakedp203dev.dfs.core.windows.net/"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "dp203-df-2022_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"datalake1_accountKey": {
+						"value": "[parameters('datalake1_accountKey')]"
+					},
+					"sqldb_dev_connectionString": {
+						"value": "[parameters('sqldb_dev_connectionString')]"
+					},
+					"datalake1_properties_typeProperties_url": {
+						"value": "[parameters('datalake1_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "dp203-df-2022_ArmTemplate_1",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_1.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"appuservm_password": {
+						"value": "[parameters('appuservm_password')]"
+					},
+					"appuservm_properties_typeProperties_host": {
+						"value": "[parameters('appuservm_properties_typeProperties_host')]"
+					},
+					"appuservm_properties_typeProperties_userId": {
+						"value": "[parameters('appuservm_properties_typeProperties_userId')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'dp203-df-2022_ArmTemplate_0')]"
+			]
+		},
+		{
+			"name": "dp203-df-2022_ArmTemplate_2",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_2.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'dp203-df-2022_ArmTemplate_1')]"
+			]
+		}
+	]
+}
