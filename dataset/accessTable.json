@@ -1,0 +1,40 @@
+{
+	"name": "accessTable",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sqldb_dev",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "ch_RemoteAddr",
+				"type": "varchar"
+			},
+			{
+				"name": "ch_TimeLocal",
+				"type": "varchar"
+			},
+			{
+				"name": "ch_Request",
+				"type": "varchar"
+			},
+			{
+				"name": "int_Status",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "Bytes",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "serverLogs"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

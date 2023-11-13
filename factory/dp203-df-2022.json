@@ -1,0 +1,9 @@
+{
+	"name": "dp203-df-2022",
+	"location": "westeurope",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "6042c611-3272-4fcd-948a-bc016b3affd5",
+		"tenantId": "586d2fb1-af83-49d7-b4cc-2625fecb0610"
+	}
+}
