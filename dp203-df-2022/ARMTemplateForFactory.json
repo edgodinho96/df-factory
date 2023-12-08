@@ -3571,6 +3571,92 @@
 							},
 							"traceLevel": "Fine"
 						}
+					},
+					{
+						"name": "copy_output",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "08_stagingmetrics",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.json",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['average']"
+										},
+										"sink": {
+											"name": "Average",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "$['time']"
+										},
+										"sink": {
+											"name": "Metrictime",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "$['metricName']"
+										},
+										"sink": {
+											"name": "MetricName",
+											"type": "String"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "stagingoutput",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "metricsTable",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
 					}
 				],
 				"policy": {
@@ -3579,7 +3665,47 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/08_stagingmetrics')]"
+				"[concat(variables('factoryId'), '/dataflows/08_stagingmetrics')]",
+				"[concat(variables('factoryId'), '/datasets/stagingoutput')]",
+				"[concat(variables('factoryId'), '/datasets/metricsTable')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/metricsTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqldb_dev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Average",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 0
+					},
+					{
+						"name": "Metrictime",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "MetricName",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "WebMetrics"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldb_dev')]"
 			]
 		}
 	]
