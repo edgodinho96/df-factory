@@ -31,7 +31,7 @@
 			"type": "string",
 			"defaultValue": "https://datalakedp203dev.dfs.core.windows.net/"
 		},
-		"blobtrigger_properties_typeProperties_scope": {
+		"staging_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/02e2a11f-2662-4186-b75a-997b7a3c9268/resourceGroups/data-grp/providers/Microsoft.Storage/storageAccounts/datalakedp203dev"
 		},
@@ -118,8 +118,8 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
-					"blobtrigger_properties_typeProperties_scope": {
-						"value": "[parameters('blobtrigger_properties_typeProperties_scope')]"
+					"staging_properties_typeProperties_scope": {
+						"value": "[parameters('staging_properties_typeProperties_scope')]"
 					}
 				}
 			},

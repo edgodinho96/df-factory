@@ -31,7 +31,7 @@
 			"type": "string",
 			"defaultValue": "https://datalakedp203dev.dfs.core.windows.net/"
 		},
-		"blobtrigger_properties_typeProperties_scope": {
+		"staging_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/02e2a11f-2662-4186-b75a-997b7a3c9268/resourceGroups/data-grp/providers/Microsoft.Storage/storageAccounts/datalakedp203dev"
 		}
@@ -439,6 +439,209 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/07_dataflow_split')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/12-df-metrics')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "08_stagingmetrics",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "08_stagingmetrics",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"stagingmetrics": {},
+									"stagingoutput": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "copy_output",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "08_stagingmetrics",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.json",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "AzureSqlSink",
+								"writeBehavior": "insert",
+								"sqlWriterUseTableLock": false
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"path": "$['average']"
+										},
+										"sink": {
+											"name": "Average",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"path": "$['time']"
+										},
+										"sink": {
+											"name": "Metrictime",
+											"type": "DateTime"
+										}
+									},
+									{
+										"source": {
+											"path": "$['metricName']"
+										},
+										"sink": {
+											"name": "MetricName",
+											"type": "String"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "stagingoutput",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "metricsTable",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Deleteoutput",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "copy_output",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "stagingoutput",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*.*",
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "Deletestagingmetrics",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "copy_output",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "stagingmetricsdataset",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*.*",
+								"enablePartitionDiscovery": false
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/08_stagingmetrics')]",
+				"[concat(variables('factoryId'), '/datasets/stagingoutput')]",
+				"[concat(variables('factoryId'), '/datasets/metricsTable')]",
+				"[concat(variables('factoryId'), '/datasets/stagingmetricsdataset')]"
 			]
 		},
 		{
@@ -2447,6 +2650,44 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/metricsTable')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqldb_dev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "Average",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 0
+					},
+					{
+						"name": "Metrictime",
+						"type": "datetime",
+						"precision": 23,
+						"scale": 3
+					},
+					{
+						"name": "MetricName",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "WebMetrics"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldb_dev')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/nginxBinary')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -3541,253 +3782,12 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/12-df-metrics')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "08_stagingmetrics",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "08_stagingmetrics",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"stagingmetrics": {},
-									"stagingoutput": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					},
-					{
-						"name": "copy_output",
-						"type": "Copy",
-						"dependsOn": [
-							{
-								"activity": "08_stagingmetrics",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"source": {
-								"type": "JsonSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"wildcardFileName": "*.json",
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "JsonReadSettings"
-								}
-							},
-							"sink": {
-								"type": "AzureSqlSink",
-								"writeBehavior": "insert",
-								"sqlWriterUseTableLock": false
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"path": "$['average']"
-										},
-										"sink": {
-											"name": "Average",
-											"type": "Decimal"
-										}
-									},
-									{
-										"source": {
-											"path": "$['time']"
-										},
-										"sink": {
-											"name": "Metrictime",
-											"type": "DateTime"
-										}
-									},
-									{
-										"source": {
-											"path": "$['metricName']"
-										},
-										"sink": {
-											"name": "MetricName",
-											"type": "String"
-										}
-									}
-								]
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "stagingoutput",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						],
-						"outputs": [
-							{
-								"referenceName": "metricsTable",
-								"type": "DatasetReference",
-								"parameters": {}
-							}
-						]
-					},
-					{
-						"name": "Deleteoutput",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "copy_output",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "stagingoutput",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"wildcardFileName": "*.*",
-								"enablePartitionDiscovery": false
-							}
-						}
-					},
-					{
-						"name": "Deletestagingmetrics",
-						"type": "Delete",
-						"dependsOn": [
-							{
-								"activity": "copy_output",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataset": {
-								"referenceName": "stagingmetricsdataset",
-								"type": "DatasetReference",
-								"parameters": {}
-							},
-							"enableLogging": false,
-							"storeSettings": {
-								"type": "AzureBlobFSReadSettings",
-								"recursive": true,
-								"wildcardFileName": "*.*",
-								"enablePartitionDiscovery": false
-							}
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/08_stagingmetrics')]",
-				"[concat(variables('factoryId'), '/datasets/stagingoutput')]",
-				"[concat(variables('factoryId'), '/datasets/metricsTable')]",
-				"[concat(variables('factoryId'), '/datasets/stagingmetricsdataset')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/metricsTable')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "sqldb_dev",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "AzureSqlTable",
-				"schema": [
-					{
-						"name": "Average",
-						"type": "decimal",
-						"precision": 18,
-						"scale": 0
-					},
-					{
-						"name": "Metrictime",
-						"type": "datetime",
-						"precision": 23,
-						"scale": 3
-					},
-					{
-						"name": "MetricName",
-						"type": "varchar"
-					}
-				],
-				"typeProperties": {
-					"schema": "dbo",
-					"table": "WebMetrics"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/sqldb_dev')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/blobtrigger')]",
+			"name": "[concat(parameters('factoryName'), '/staging')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -3801,7 +3801,7 @@
 				"typeProperties": {
 					"blobPathBeginsWith": "/stagingmetric/blobs/PT1H",
 					"ignoreEmptyBlobs": false,
-					"scope": "[parameters('blobtrigger_properties_typeProperties_scope')]",
+					"scope": "[parameters('staging_properties_typeProperties_scope')]",
 					"events": [
 						"Microsoft.Storage.BlobCreated"
 					]

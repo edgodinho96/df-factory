@@ -7,7 +7,7 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "dp203-df-2022"
 		},
-		"blobtrigger_properties_typeProperties_scope": {
+		"staging_properties_typeProperties_scope": {
 			"type": "string",
 			"defaultValue": "/subscriptions/02e2a11f-2662-4186-b75a-997b7a3c9268/resourceGroups/data-grp/providers/Microsoft.Storage/storageAccounts/datalakedp203dev"
 		}
@@ -553,12 +553,12 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/blobtrigger')]",
+			"name": "[concat(parameters('factoryName'), '/staging')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
-				"runtimeState": "Stopped",
+				"runtimeState": "Started",
 				"pipelines": [
 					{
 						"pipelineReference": {
@@ -572,7 +572,7 @@
 				"typeProperties": {
 					"blobPathBeginsWith": "/stagingmetric/blobs/PT1H",
 					"ignoreEmptyBlobs": false,
-					"scope": "[parameters('blobtrigger_properties_typeProperties_scope')]",
+					"scope": "[parameters('staging_properties_typeProperties_scope')]",
 					"events": [
 						"Microsoft.Storage.BlobCreated"
 					]
