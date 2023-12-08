@@ -571,7 +571,6 @@
 				"type": "BlobEventsTrigger",
 				"typeProperties": {
 					"blobPathBeginsWith": "/stagingmetric/blobs/PT1H",
-					"blobPathEndsWith": ".json",
 					"ignoreEmptyBlobs": false,
 					"scope": "[parameters('blobtrigger_properties_typeProperties_scope')]",
 					"events": [
