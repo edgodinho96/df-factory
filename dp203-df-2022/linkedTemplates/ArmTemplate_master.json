@@ -31,10 +31,6 @@
 			"type": "string",
 			"defaultValue": "https://datalakedp203dev.dfs.core.windows.net/"
 		},
-		"staging_properties_typeProperties_scope": {
-			"type": "string",
-			"defaultValue": "/subscriptions/02e2a11f-2662-4186-b75a-997b7a3c9268/resourceGroups/data-grp/providers/Microsoft.Storage/storageAccounts/datalakedp203dev"
-		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -117,9 +113,6 @@
 				"parameters": {
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
-					},
-					"staging_properties_typeProperties_scope": {
-						"value": "[parameters('staging_properties_typeProperties_scope')]"
 					}
 				}
 			},
