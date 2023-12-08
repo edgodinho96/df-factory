@@ -2465,6 +2465,83 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/stagingmetricsdataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "datalake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "stagingmetric"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"total": {
+							"type": "number"
+						},
+						"minimum": {
+							"type": "number"
+						},
+						"maximum": {
+							"type": "number"
+						},
+						"average": {
+							"type": "number"
+						},
+						"resourceId": {
+							"type": "string"
+						},
+						"time": {
+							"type": "string"
+						},
+						"metricName": {
+							"type": "string"
+						},
+						"timeGrain": {
+							"type": "string"
+						},
+						"count": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/datalake1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/stagingoutput')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "datalake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "stagingoutput"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/datalake1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/appuservm')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -3389,6 +3466,74 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/datalake_parquet')]",
 				"[concat(variables('factoryId'), '/datasets/logdata_parquet')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/08_stagingmetrics')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "stagingmetricsdataset",
+								"type": "DatasetReference"
+							},
+							"name": "stagingmetrics"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "stagingoutput",
+								"type": "DatasetReference"
+							},
+							"name": "stagingoutput"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectcolumns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          total as double,",
+						"          minimum as double,",
+						"          maximum as double,",
+						"          average as double,",
+						"          resourceId as string,",
+						"          time as string,",
+						"          metricName as string,",
+						"          timeGrain as string,",
+						"          count as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'documentPerLine') ~> stagingmetrics",
+						"stagingmetrics select(mapColumn(",
+						"          average,",
+						"          time,",
+						"          metricName",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectcolumns",
+						"selectcolumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> stagingoutput"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/stagingmetricsdataset')]",
+				"[concat(variables('factoryId'), '/datasets/stagingoutput')]"
 			]
 		}
 	]

@@ -231,6 +231,79 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/stagingmetricsdataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "datalake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "stagingmetric"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"total": {
+							"type": "number"
+						},
+						"minimum": {
+							"type": "number"
+						},
+						"maximum": {
+							"type": "number"
+						},
+						"average": {
+							"type": "number"
+						},
+						"resourceId": {
+							"type": "string"
+						},
+						"time": {
+							"type": "string"
+						},
+						"metricName": {
+							"type": "string"
+						},
+						"timeGrain": {
+							"type": "string"
+						},
+						"count": {
+							"type": "integer"
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/stagingoutput')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "datalake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "stagingoutput"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/appuservm')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -1730,6 +1803,74 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/08_stagingmetrics')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "stagingmetricsdataset",
+								"type": "DatasetReference"
+							},
+							"name": "stagingmetrics"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "stagingoutput",
+								"type": "DatasetReference"
+							},
+							"name": "stagingoutput"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectcolumns"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          total as double,",
+						"          minimum as double,",
+						"          maximum as double,",
+						"          average as double,",
+						"          resourceId as string,",
+						"          time as string,",
+						"          metricName as string,",
+						"          timeGrain as string,",
+						"          count as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'documentPerLine') ~> stagingmetrics",
+						"stagingmetrics select(mapColumn(",
+						"          average,",
+						"          time,",
+						"          metricName",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectcolumns",
+						"selectcolumns sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> stagingoutput"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/stagingmetricsdataset')]",
+				"[concat(variables('factoryId'), '/datasets/stagingoutput')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/01-MappingDataFlow-FactSales')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -1829,147 +1970,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/dataflows/02_dataflow_Dim')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/03-copy-logdata-with filter')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Dataflow parquet filtered",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "03_dataflow_logdata",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"logdataParquetStream": {},
-									"logdataParquetTable": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-08T21:34:52Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/03_dataflow_logdata')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/04-Convert - Parquet to JSON')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Dataflow JSON file",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "04_dataflow_json",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"logParquetJSON": {},
-									"JSONData": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-08T21:39:51Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/04_dataflow_json')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/05-JSON - array')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Dataflow JSON Array",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "05_dataflow_JSONArrays",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"CustomerJSON": {},
-									"CustomerJSONTable": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {}
-				},
-				"annotations": [],
-				"lastPublishTime": "2023-11-09T21:16:53Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/05_dataflow_JSONArrays')]"
 			]
 		}
 	]
