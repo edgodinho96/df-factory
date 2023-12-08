@@ -1,0 +1,19 @@
+{
+	"name": "insights",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "datalake1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "resourceId=/SUBSCRIPTIONS/02E2A11F-2662-4186-B75A-997B7A3C9268/RESOURCEGROUPS/APP-GRP/PROVIDERS/MICROSOFT.WEB/SITES/APPWEBBB",
+				"fileSystem": "insights-metrics-pt1m"
+			}
+		},
+		"schema": {}
+	}
+}
