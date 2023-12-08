@@ -22,6 +22,9 @@
 		},
 		"datalake1_properties_typeProperties_url": {
 			"value": "https://datalakedp203dev.dfs.core.windows.net/"
+		},
+		"blobtrigger_properties_typeProperties_scope": {
+			"value": "/subscriptions/02e2a11f-2662-4186-b75a-997b7a3c9268/resourceGroups/data-grp/providers/Microsoft.Storage/storageAccounts/datalakedp203dev"
 		}
 	}
 }
