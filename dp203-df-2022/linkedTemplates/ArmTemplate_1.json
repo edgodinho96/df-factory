@@ -89,6 +89,28 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/insights')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "datalake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "resourceId=/SUBSCRIPTIONS/02E2A11F-2662-4186-B75A-997B7A3C9268/RESOURCEGROUPS/APP-GRP/PROVIDERS/MICROSOFT.WEB/SITES/APPWEBBB",
+						"fileSystem": "insights-metrics-pt1m"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/logdataJSON')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -358,28 +380,6 @@
 					"referenceName": "adf123",
 					"type": "IntegrationRuntimeReference"
 				}
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/insights')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "datalake1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "resourceId=/SUBSCRIPTIONS/02E2A11F-2662-4186-B75A-997B7A3C9268/RESOURCEGROUPS/APP-GRP/PROVIDERS/MICROSOFT.WEB/SITES/APPWEBBB",
-						"fileSystem": "insights-metrics-pt1m"
-					}
-				},
-				"schema": {}
 			},
 			"dependsOn": []
 		},

@@ -2612,6 +2612,30 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/insights')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "datalake1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "resourceId=/SUBSCRIPTIONS/02E2A11F-2662-4186-B75A-997B7A3C9268/RESOURCEGROUPS/APP-GRP/PROVIDERS/MICROSOFT.WEB/SITES/APPWEBBB",
+						"fileSystem": "insights-metrics-pt1m"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/datalake1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/logdataJSON')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -3867,61 +3891,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/stagingmetricsdataset')]",
 				"[concat(variables('factoryId'), '/datasets/stagingoutput')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/insights')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "datalake1",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Json",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": "resourceId=/SUBSCRIPTIONS/02E2A11F-2662-4186-B75A-997B7A3C9268/RESOURCEGROUPS/APP-GRP/PROVIDERS/MICROSOFT.WEB/SITES/APPWEBBB",
-						"fileSystem": "insights-metrics-pt1m"
-					}
-				},
-				"schema": {}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/datalake1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/tumblingTrigger')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipeline": {
-					"pipelineReference": {
-						"referenceName": "12-df-metrics",
-						"type": "PipelineReference"
-					},
-					"parameters": {}
-				},
-				"type": "TumblingWindowTrigger",
-				"typeProperties": {
-					"frequency": "Minute",
-					"interval": 15,
-					"startTime": "2023-12-06T16:29:00Z",
-					"delay": "00:00:00",
-					"maxConcurrency": 50,
-					"retryPolicy": {
-						"intervalInSeconds": 30
-					},
-					"dependsOn": []
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/12-df-metrics')]"
 			]
 		}
 	]
